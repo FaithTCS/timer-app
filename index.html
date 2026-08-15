@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#4C2A6B">
+<title>Potty Time</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Potty">
+<meta name="description" content="A simple potty training tracker with reminders.">
+<style>
+:root{
+  --ink:#2A1638;
+  --plum:#4C2A6B;
+  --grape:#7C3AED;
+  --orchid:#A855F7;
+  --lilac:#EADDFD;
+  --mist:#FAF7FF;
+  --line:#DCCBF5;
+  --rose:#D9436E;
+  --rosebg:#FDE7EE;
+  --gold:#F5B301;
+  --white:#fff;
+  --shadow:0 2px 10px rgba(76,42,107,.08);
+  --shadow-lg:0 10px 34px rgba(76,42,107,.18);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--mist);
+  color:var(--ink);
+  font-family:ui-rounded,"SF Pro Rounded","Hiragino Maru Gothic ProN","Segoe UI Variable Display",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:16px;line-height:1.4;
+  padding-bottom:96px;
+  overflow-x:hidden;
+}
+button{font-family:inherit;font-size:inherit;cursor:pointer;border:0;background:none;color:inherit;}
+input,select,textarea{font-family:inherit;font-size:16px;color:var(--ink);}
+:focus-visible{outline:3px solid var(--orchid);outline-offset:2px;border-radius:8px;}
+
+/* ---------- header ---------- */
+.top{
+  background:linear-gradient(160deg,#5B3183 0%,#3E1F5C 100%);
+  color:#fff;padding:18px 18px 26px;
+  border-radius:0 0 26px 26px;
+  position:relative;
+}
+.top-row{display:flex;align-items:center;gap:12px;}
+.top-row .gear:first-of-type{margin-left:auto;}
+.kidname{font-size:26px;font-weight:800;letter-spacing:-.4px;line-height:1.1;}
+.kidage{font-size:13px;color:#D6BFF2;font-weight:600;margin-top:2px;}
+.gear{
+  margin-left:0;width:42px;height:42px;border-radius:14px;
+  background:rgba(255,255,255,.14);display:grid;place-items:center;font-size:19px;flex:none;
+}
+.gear:active{background:rgba(255,255,255,.26);}
+
+/* ---------- countdown ---------- */
+.wrap{max-width:560px;margin:0 auto;padding:0 16px;}
+.timer{
+  background:var(--white);border-radius:24px;box-shadow:var(--shadow-lg);
+  margin-top:-16px;padding:22px 18px 18px;text-align:center;position:relative;z-index:2;
+}
+.ring{width:206px;height:206px;margin:0 auto;position:relative;}
+.ring svg{transform:rotate(-90deg);display:block;}
+.ring-mid{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+}
+.eyebrow{
+  font-size:11px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;
+  color:var(--orchid);
+}
+.bignum{font-size:52px;font-weight:800;letter-spacing:-2px;line-height:1;margin:4px 0 2px;font-variant-numeric:tabular-nums;}
+.bigunit{font-size:13px;font-weight:700;color:var(--plum);opacity:.72;}
+.duewhen{margin-top:12px;font-size:14px;color:var(--plum);opacity:.8;font-weight:600;}
+.sincelast{font-size:13px;color:var(--plum);opacity:.6;margin-top:3px;}
+
+body.due .bignum{color:var(--rose);}
+body.due .eyebrow{color:var(--rose);}
+body.due .timer{box-shadow:0 0 0 3px var(--rose),var(--shadow-lg);}
+body.paused .bignum{color:#9C86B8;}
+
+.timer-btns{display:flex;gap:10px;margin-top:16px;}
+.btn{
+  border-radius:14px;padding:12px 14px;font-weight:700;font-size:14px;
+  background:var(--lilac);color:var(--plum);flex:1;transition:transform .08s;
+}
+.btn:active{transform:scale(.97);}
+.btn.ghost{background:transparent;box-shadow:inset 0 0 0 2px var(--line);}
+
+/* ---------- ribbon ---------- */
+.card{
+  background:var(--white);border-radius:20px;box-shadow:var(--shadow);
+  padding:16px;margin-top:14px;
+}
+.card-title{
+  font-size:11px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase;
+  color:var(--orchid);margin-bottom:12px;display:flex;align-items:center;gap:8px;
+}
+.card-title span{margin-left:auto;color:#9C86B8;letter-spacing:0;text-transform:none;font-size:12px;font-weight:600;}
+.ribbon{position:relative;height:52px;margin:0 4px;}
+.ribbon-track{
+  position:absolute;left:0;right:0;top:20px;height:8px;border-radius:8px;
+  background:var(--lilac);
+}
+.ribbon-now{position:absolute;top:12px;width:2px;height:24px;background:var(--plum);opacity:.35;border-radius:2px;}
+.bead{
+  position:absolute;top:12px;width:24px;height:24px;margin-left:-12px;border-radius:50%;
+  background:var(--grape);color:#fff;display:grid;place-items:center;font-size:12px;
+  box-shadow:0 2px 6px rgba(76,42,107,.3);border:2px solid #fff;
+}
+.bead.acc{background:var(--rose);}
+.bead.dry{background:#B79AE0;}
+.ribbon-labels{
+  position:absolute;left:0;right:0;top:38px;display:flex;justify-content:space-between;
+  font-size:11px;color:#9C86B8;font-weight:600;
+}
+.ribbon-empty{font-size:13px;color:#9C86B8;text-align:center;padding:14px 0;}
+
+/* ---------- tallies ---------- */
+.tallies{display:flex;gap:10px;margin-top:14px;}
+.tally{
+  flex:1;background:var(--white);border-radius:18px;box-shadow:var(--shadow);
+  padding:14px 10px;text-align:center;
+}
+.tally b{display:block;font-size:28px;font-weight:800;letter-spacing:-1px;line-height:1;}
+.tally i{display:block;font-style:normal;font-size:11px;font-weight:700;color:#8B72AC;margin-top:5px;letter-spacing:.2px;}
+.tally.acc b{color:var(--rose);}
+.tally.streak b{color:var(--gold);}
+
+/* ---------- log list ---------- */
+.entry{
+  display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid #F0E9FB;
+}
+.entry:last-child{border-bottom:0;padding-bottom:0;}
+.entry-time{
+  font-size:13px;font-weight:800;color:var(--plum);width:66px;flex:none;padding-top:2px;
+  font-variant-numeric:tabular-nums;
+}
+.entry-body{flex:1;min-width:0;}
+.chips{display:flex;flex-wrap:wrap;gap:6px;}
+.chip{
+  font-size:12px;font-weight:700;padding:4px 9px;border-radius:9px;
+  background:var(--lilac);color:var(--plum);
+}
+.chip.acc{background:var(--rosebg);color:var(--rose);}
+.chip.soft{background:#F4EEFC;color:#8B72AC;}
+.entry-note{font-size:13px;color:#6D5A85;margin-top:6px;word-break:break-word;}
+.entry-del{color:#C3B0DC;font-size:17px;padding:2px 4px;flex:none;}
+.empty{text-align:center;color:#9C86B8;font-size:14px;padding:22px 10px;}
+.empty b{display:block;color:var(--plum);font-size:15px;margin-bottom:4px;}
+
+.dayhead{
+  font-size:12px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;
+  color:#9C86B8;margin:18px 0 2px;
+}
+
+/* ---------- add button ---------- */
+.fab{
+  position:fixed;left:50%;transform:translateX(-50%);
+  bottom:calc(18px + env(safe-area-inset-bottom));
+  background:var(--grape);color:#fff;font-weight:800;font-size:16px;
+  padding:16px 30px;border-radius:999px;box-shadow:0 8px 24px rgba(124,58,237,.45);
+  display:flex;align-items:center;gap:9px;z-index:40;
+}
+.fab:active{transform:translateX(-50%) scale(.96);}
+.fab b{font-size:21px;font-weight:800;line-height:1;}
+
+/* ---------- sheets ---------- */
+.scrim{
+  position:fixed;inset:0;background:rgba(42,22,56,.5);z-index:50;
+  display:none;align-items:flex-end;justify-content:center;
+}
+.scrim.on{display:flex;}
+.sheet{
+  background:var(--mist);width:100%;max-width:560px;max-height:92vh;overflow-y:auto;
+  border-radius:24px 24px 0 0;padding:8px 18px calc(26px + env(safe-area-inset-bottom));
+  animation:rise .22s ease-out;
+}
+@keyframes rise{from{transform:translateY(26px);opacity:.6;}to{transform:none;opacity:1;}}
+.grab{width:40px;height:4px;border-radius:4px;background:var(--line);margin:8px auto 14px;}
+.sheet h2{font-size:21px;font-weight:800;letter-spacing:-.4px;margin:0 0 16px;}
+.field{margin-bottom:16px;}
+.label{font-size:12px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#8B72AC;margin-bottom:8px;}
+.opts{display:flex;flex-wrap:wrap;gap:8px;}
+.opt{
+  background:var(--white);box-shadow:inset 0 0 0 2px var(--line);
+  border-radius:14px;padding:11px 14px;font-weight:700;font-size:14px;color:var(--plum);
+}
+.opt.on{background:var(--grape);color:#fff;box-shadow:none;}
+.opt.on.warn{background:var(--rose);}
+.opt:active{transform:scale(.97);}
+.txt{
+  width:100%;background:var(--white);border:2px solid var(--line);border-radius:14px;
+  padding:12px 13px;font-weight:600;
+}
+.txt:focus{border-color:var(--orchid);outline:none;}
+.row2{display:flex;gap:10px;}
+.row2>*{flex:1;min-width:0;}
+.save{
+  width:100%;background:var(--grape);color:#fff;font-weight:800;font-size:16px;
+  padding:16px;border-radius:16px;margin-top:6px;box-shadow:0 6px 18px rgba(124,58,237,.35);
+}
+.save:active{transform:scale(.98);}
+.cancel{width:100%;padding:14px;font-weight:700;color:#8B72AC;margin-top:4px;}
+.note{font-size:12.5px;color:#8B72AC;line-height:1.5;}
+.switch{
+  display:flex;align-items:center;gap:12px;background:var(--white);
+  border-radius:14px;padding:13px 14px;box-shadow:inset 0 0 0 2px var(--line);font-weight:700;
+  font-size:14px;color:var(--plum);width:100%;text-align:left;
+}
+.switch .knob{
+  margin-left:auto;width:46px;height:27px;border-radius:99px;background:var(--line);
+  position:relative;flex:none;transition:background .16s;
+}
+.switch .knob::after{
+  content:"";position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .16s;
+}
+.switch.on .knob{background:var(--grape);}
+.switch.on .knob::after{transform:translateX(19px);}
+
+.summary{
+  background:var(--lilac);border-radius:16px;padding:14px 16px;margin:4px 0 18px;
+  font-size:15px;font-weight:700;color:var(--plum);line-height:1.45;
+}
+.summary em{font-style:normal;color:var(--grape);font-weight:800;}
+
+.toast{
+  position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:80;
+  background:var(--ink);color:#fff;padding:12px 18px;border-radius:14px;
+  font-size:14px;font-weight:700;box-shadow:var(--shadow-lg);opacity:0;pointer-events:none;
+  transition:opacity .2s,transform .2s;max-width:88vw;text-align:center;
+}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(-6px);}
+
+/* ---------- first run ---------- */
+#setup{position:fixed;inset:0;background:var(--mist);z-index:90;overflow-y:auto;display:none;}
+#setup.on{display:block;}
+.hello{padding:44px 22px 10px;max-width:520px;margin:0 auto;}
+.hello .mark{font-size:44px;line-height:1;}
+.hello h1{font-size:31px;font-weight:800;letter-spacing:-.9px;margin:14px 0 6px;}
+.hello p{color:#6D5A85;font-size:15px;margin:0 0 26px;}
+.setup-body{max-width:520px;margin:0 auto;padding:0 22px 40px;}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important;}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ FIRST RUN ============ -->
+<div id="setup">
+  <div class="hello">
+    <div class="mark">🚽</div>
+    <h1>Let's get started</h1>
+    <p>Tell me who we're training and how often you want a nudge.</p>
+  </div>
+  <div class="setup-body">
+    <div class="field">
+      <div class="label">Child's name</div>
+      <input class="txt" id="suName" placeholder="First name" autocomplete="off">
+    </div>
+    <div class="field">
+      <div class="label">Age</div>
+      <div class="row2">
+        <input class="txt" id="suY" type="number" min="0" max="12" placeholder="Years" inputmode="numeric">
+        <input class="txt" id="suM" type="number" min="0" max="11" placeholder="Months" inputmode="numeric">
+      </div>
+      <div class="note" style="margin-top:8px" id="suHint">Age just sets a starting reminder interval. You can change it any time.</div>
+    </div>
+    <div class="field">
+      <div class="label">Remind me every</div>
+      <div class="opts" id="suInt"></div>
+    </div>
+    <div class="field">
+      <div class="label">Between these hours</div>
+      <div class="row2">
+        <input class="txt" id="suStart" type="time" value="07:00">
+        <input class="txt" id="suEnd" type="time" value="21:00">
+      </div>
+    </div>
+    <div class="summary" id="suSummary"></div>
+    <button class="save" onclick="finishSetup()">Start tracking</button>
+  </div>
+</div>
+
+<!-- ============ MAIN ============ -->
+<div class="top">
+  <div class="wrap top-row">
+    <div>
+      <div class="kidname" id="hName">—</div>
+      <div class="kidage" id="hAge"></div>
+    </div>
+    <button class="gear" onclick="openSettings()" aria-label="Settings">⚙️</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="timer">
+    <div class="ring">
+      <svg width="206" height="206" viewBox="0 0 206 206" aria-hidden="true">
+        <circle cx="103" cy="103" r="90" fill="none" stroke="#EADDFD" stroke-width="15"></circle>
+        <circle id="arc" cx="103" cy="103" r="90" fill="none" stroke="#7C3AED" stroke-width="15"
+                stroke-linecap="round" stroke-dasharray="565.5" stroke-dashoffset="0"></circle>
+      </svg>
+      <div class="ring-mid">
+        <div class="eyebrow" id="tLabel">Next trip in</div>
+        <div class="bignum" id="tNum">—</div>
+        <div class="bigunit" id="tUnit"></div>
+      </div>
+    </div>
+    <div class="duewhen" id="tDue"></div>
+    <div class="sincelast" id="tSince"></div>
+    <div class="timer-btns">
+      <button class="btn" onclick="resetTimer(true)">Start the clock over</button>
+      <button class="btn ghost" id="pauseBtn" onclick="togglePause()">Pause</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Today's rhythm <span id="ribCount"></span></div>
+    <div class="ribbon" id="ribbon"></div>
+    <div class="ribbon-empty" id="ribEmpty">Nothing logged yet today.</div>
+  </div>
+
+  <div class="tallies">
+    <div class="tally"><b id="tlPotty">0</b><i>IN THE POTTY</i></div>
+    <div class="tally acc"><b id="tlAcc">0</b><i>ACCIDENTS</i></div>
+    <div class="tally streak"><b id="tlStreak">0</b><i>DRY STREAK</i></div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-title">History</div>
+    <div id="log"></div>
+  </div>
+
+</div>
+
+<button class="fab" onclick="openLog()"><b>+</b> Add</button>
+
+<!-- ============ LOG SHEET ============ -->
+<div class="scrim" id="logScrim" onclick="if(event.target===this)closeSheet('logScrim')">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2 id="logTitle">Add an entry</h2>
+
+    <div class="field">
+      <div class="label">What happened</div>
+      <div class="opts" id="fWhat"></div>
+    </div>
+
+    <div class="field">
+      <div class="label">Where</div>
+      <div class="opts" id="fWhere"></div>
+    </div>
+
+    <div class="field">
+      <div class="label">Who's on duty</div>
+      <div class="opts" id="fBy"></div>
+    </div>
+
+    <div class="field">
+      <div class="label">Who started it</div>
+      <div class="opts" id="fWho"></div>
+    </div>
+
+    <div class="field">
+      <button class="switch" id="fHands" onclick="toggleHands()">
+        Washed hands <span class="knob"></span>
+      </button>
+    </div>
+
+    <div class="field">
+      <div class="label">Time</div>
+      <input class="txt" id="fTime" type="time">
+    </div>
+
+    <div class="field">
+      <div class="label">Notes</div>
+      <textarea class="txt" id="fNote" rows="2" placeholder="Anything worth remembering"></textarea>
+    </div>
+
+    <button class="save" onclick="saveLog()">Save</button>
+    <button class="cancel" onclick="closeSheet('logScrim')">Cancel</button>
+  </div>
+</div>
+
+<!-- ============ SETTINGS SHEET ============ -->
+<div class="scrim" id="setScrim" onclick="if(event.target===this)closeSheet('setScrim')">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2>Settings</h2>
+
+    <div class="field">
+      <div class="label">Child's name</div>
+      <input class="txt" id="sName">
+    </div>
+
+    <div class="field">
+      <div class="label">Age</div>
+      <div class="row2">
+        <input class="txt" id="sY" type="number" min="0" max="12" placeholder="Years" inputmode="numeric">
+        <input class="txt" id="sM" type="number" min="0" max="11" placeholder="Months" inputmode="numeric">
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="label">Remind me every</div>
+      <div class="opts" id="sInt"></div>
+    </div>
+
+    <div class="field">
+      <div class="label">Between these hours</div>
+      <div class="row2">
+        <input class="txt" id="sStart" type="time">
+        <input class="txt" id="sEnd" type="time">
+      </div>
+      <div class="note" style="margin-top:8px">No buzzing at 3am. Outside these hours the clock pauses on its own.</div>
+    </div>
+
+    <div class="summary" id="sSummary"></div>
+
+    <div class="field">
+      <div class="label">Who helps out</div>
+      <div class="opts" id="sCare"></div>
+      <div class="row2" style="margin-top:10px">
+        <input class="txt" id="sCareNew" placeholder="Add a name" autocomplete="off">
+        <button class="opt" style="flex:0 0 96px" onclick="addCaregiver()">Add</button>
+      </div>
+      <div class="note" style="margin-top:8px">Tap a name to remove it. These show up when you add an entry.</div>
+    </div>
+
+    <div class="field">
+      <button class="switch" id="sNotif" onclick="toggleLockScreen()">
+        Lock screen reminders <span class="knob"></span>
+      </button>
+      <div class="note" style="margin-top:8px" id="notifNote"></div>
+      <button class="opt" id="installBtn" style="margin-top:10px;display:none;width:100%"
+              onclick="installApp()">Add to home screen</button>
+    </div>
+
+    <div class="field">
+      <button class="switch" id="sSound" onclick="toggleSound()">
+        Chime with each alert <span class="knob"></span>
+      </button>
+    </div>
+
+    <button class="save" onclick="saveSettings()">Save settings</button>
+    <button class="cancel" onclick="shareApp()">Share this tracker with a friend</button>
+    <button class="cancel" onclick="closeSheet('setScrim')">Cancel</button>
+    <button class="cancel" style="color:#D9436E" onclick="wipe()">Erase all data</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   SETUP — paste your two Supabase values here.
+   Supabase dashboard -> Project Settings -> API
+   ============================================================ */
+var SUPABASE_URL      = 'PASTE_YOUR_PROJECT_URL_HERE';
+var SUPABASE_ANON_KEY = 'PASTE_YOUR_ANON_PUBLIC_KEY_HERE';
+
+/* This one is already filled in for you. */
+var VAPID_PUBLIC_KEY  = 'BEvfQ40AtDCWsYrQAkYpznrqEVT074T8ChdfuW6xTtTy5mCOZB2a_cKRU1YNvJ-ObMi_rN9r542eO4fF6CMwD9s';
+
+/* ================= storage ================= */
+var CHILD, CFG, EVENTS, NEXT_DUE;
+
+function load(k, d){
+  try{ var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; }
+}
+function save(k, v){
+  try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){}
+}
+
+var INTERVALS = [10,15,20,30,45,60,90];
+
+function suggestInterval(y, m){
+  var months = (y||0)*12 + (m||0);
+  if(months < 24) return 20;
+  if(months < 30) return 30;
+  if(months < 36) return 45;
+  return 60;
+}
+
+function boot(){
+  CHILD  = load('pt_child', null);
+  CFG    = load('pt_cfg', {interval:30, dayStart:'07:00', dayEnd:'21:00', notif:false, sound:true, paused:false});
+  if(!CFG.caregivers || !CFG.caregivers.length) CFG.caregivers = ['Mom','Dad'];
+  if(!CFG.lastBy) CFG.lastBy = CFG.caregivers[0];
+  EVENTS = load('pt_events', []);
+  NEXT_DUE = load('pt_next', 0);
+
+  buildIntervalOpts('suInt', 30);
+  buildIntervalOpts('sInt', CFG.interval);
+  buildLogOpts();
+
+  if(!CHILD){
+    document.getElementById('setup').classList.add('on');
+  }else{
+    startApp();
+  }
+}
+
+function startApp(){
+  if(!NEXT_DUE) resetTimer(false);
+  paintHeader();
+  render();
+  tick();
+  setInterval(tick, 1000);
+  registerSW();
+}
+
+/* ================= setup ================= */
+function buildIntervalOpts(id, sel){
+  var box = document.getElementById(id);
+  box.innerHTML = '';
+  INTERVALS.forEach(function(n){
+    var b = document.createElement('button');
+    b.className = 'opt' + (n === sel ? ' on' : '');
+    b.textContent = n + ' min';
+    b.setAttribute('data-v', n);
+    b.onclick = function(){
+      var all = box.querySelectorAll('.opt');
+      for(var i=0;i<all.length;i++) all[i].classList.remove('on');
+      b.classList.add('on');
+      paintSummary();
+    };
+    box.appendChild(b);
+  });
+  paintSummary();
+}
+function readOpt(id){
+  var on = document.getElementById(id).querySelector('.opt.on');
+  return on ? on.getAttribute('data-v') : null;
+}
+
+function sentence(intv, start, end){
+  return 'Remind me every <em>' + intv + ' min</em> between <em>' +
+         fmtClock(start) + '</em> and <em>' + fmtClock(end) + '</em>.';
+}
+function paintSummary(){
+  var su = document.getElementById('suSummary');
+  if(su){
+    var i1 = readOpt('suInt');
+    if(i1) su.innerHTML = sentence(i1,
+      document.getElementById('suStart').value || '07:00',
+      document.getElementById('suEnd').value || '21:00');
+  }
+  var ss = document.getElementById('sSummary');
+  if(ss){
+    var i2 = readOpt('sInt');
+    if(i2) ss.innerHTML = sentence(i2,
+      document.getElementById('sStart').value || CFG.dayStart,
+      document.getElementById('sEnd').value || CFG.dayEnd);
+  }
+}
+
+['suStart','suEnd','sStart','sEnd'].forEach(function(id){
+  var el = document.getElementById(id);
+  if(el) el.addEventListener('change', paintSummary);
+});
+
+document.getElementById('suY').addEventListener('input', suSuggest);
+document.getElementById('suM').addEventListener('input', suSuggest);
+function suSuggest(){
+  var y = parseInt(document.getElementById('suY').value,10) || 0;
+  var m = parseInt(document.getElementById('suM').value,10) || 0;
+  if(!y && !m) return;
+  var s = suggestInterval(y, m);
+  buildIntervalOpts('suInt', s);
+  document.getElementById('suHint').textContent =
+    'For that age, every ' + s + ' minutes is a common starting point. Change it if you like.';
+}
+
+function finishSetup(){
+  var name = document.getElementById('suName').value.trim();
+  if(!name){ toast('Add a name first'); return; }
+  var y = parseInt(document.getElementById('suY').value,10) || 0;
+  var m = parseInt(document.getElementById('suM').value,10) || 0;
+  CHILD = {name:name, y:y, m:m};
+  CFG.interval = parseInt(readOpt('suInt'),10) || 30;
+  CFG.dayStart = document.getElementById('suStart').value || '07:00';
+  CFG.dayEnd   = document.getElementById('suEnd').value   || '21:00';
+  save('pt_child', CHILD);
+  save('pt_cfg', CFG);
+  document.getElementById('setup').classList.remove('on');
+  resetTimer(false);
+  startApp();
+  setTimeout(function(){ toast('All set. Tap Add each time you go.'); }, 400);
+}
+
+/* ================= header ================= */
+function paintHeader(){
+  document.getElementById('hName').textContent = CHILD.name;
+  var parts = [];
+  if(CHILD.y) parts.push(CHILD.y + (CHILD.y === 1 ? ' year' : ' years'));
+  if(CHILD.m) parts.push(CHILD.m + (CHILD.m === 1 ? ' month' : ' months'));
+  buildLogOpts();
+  document.getElementById('hAge').textContent =
+    (parts.length ? parts.join(', ') + ' • ' : '') + 'every ' + CFG.interval + ' min';
+}
+
+/* ================= timer ================= */
+function inWindow(d){
+  var mins = d.getHours()*60 + d.getMinutes();
+  var s = timeToMins(CFG.dayStart), e = timeToMins(CFG.dayEnd);
+  if(s === e) return true;
+  if(s < e) return mins >= s && mins < e;
+  return mins >= s || mins < e;
+}
+function timeToMins(t){
+  var p = String(t || '00:00').split(':');
+  return (parseInt(p[0],10)||0)*60 + (parseInt(p[1],10)||0);
+}
+
+function resetTimer(announce){
+  NEXT_DUE = Date.now() + CFG.interval*60000;
+  save('pt_next', NEXT_DUE);
+  document.body.classList.remove('due');
+  syncReminder();
+  if(announce) toast('Clock restarted');
+  tick();
+}
+
+function togglePause(){
+  CFG.paused = !CFG.paused;
+  save('pt_cfg', CFG);
+  if(!CFG.paused) resetTimer(false); else syncReminder();
+  tick();
+  toast(CFG.paused ? 'Reminders paused' : 'Reminders back on');
+}
+
+function lastEvent(){
+  if(!EVENTS.length) return null;
+  return EVENTS.slice().sort(function(a,b){ return b.ts - a.ts; })[0];
+}
+
+function tick(){
+  var now = Date.now();
+  var arc = document.getElementById('arc');
+  var C = 2*Math.PI*90;
+  var pauseBtn = document.getElementById('pauseBtn');
+  pauseBtn.textContent = CFG.paused ? 'Resume' : 'Pause';
+  document.body.classList.toggle('paused', !!CFG.paused);
+
+  var sleeping = !inWindow(new Date());
+
+  if(CFG.paused || sleeping){
+    document.body.classList.remove('due');
+    document.getElementById('tLabel').textContent = CFG.paused ? 'Paused' : 'Quiet hours';
+    document.getElementById('tNum').textContent = '—';
+    document.getElementById('tUnit').textContent = '';
+    document.getElementById('tDue').textContent = CFG.paused
+      ? 'Tap Resume when you\u2019re back at it.'
+      : 'Reminders start again at ' + fmtClock(CFG.dayStart) + '.';
+    arc.setAttribute('stroke-dashoffset', C);
+  }else{
+    var left = NEXT_DUE - now;
+    if(left <= 0){
+      fireDue();
+      left = NEXT_DUE - Date.now();
+    }
+    var total = CFG.interval*60000;
+    var pct = Math.max(0, Math.min(1, left/total));
+    arc.setAttribute('stroke-dashoffset', String(C*(1-pct)));
+    arc.setAttribute('stroke', document.body.classList.contains('due') ? '#D9436E' : '#7C3AED');
+
+    var mins = Math.floor(left/60000), secs = Math.floor((left%60000)/1000);
+    document.getElementById('tLabel').textContent = 'Next trip in';
+    if(mins >= 1){
+      document.getElementById('tNum').textContent = mins;
+      document.getElementById('tUnit').textContent = mins === 1 ? 'minute' : 'minutes';
+    }else{
+      document.getElementById('tNum').textContent = secs;
+      document.getElementById('tUnit').textContent = 'seconds';
+    }
+    document.getElementById('tDue').textContent = 'Due at ' + fmtTime(new Date(NEXT_DUE));
+  }
+
+  var le = lastEvent();
+  var sn = document.getElementById('tSince');
+  if(le){
+    var ago = Math.floor((now - le.ts)/60000);
+    sn.textContent = 'Last trip ' + (ago < 1 ? 'just now' : ago + ' min ago') + ' at ' + fmtTime(new Date(le.ts));
+  }else{
+    sn.textContent = 'No trips logged yet.';
+  }
+}
+
+var lastFire = 0;
+function fireDue(){
+  NEXT_DUE = Date.now() + CFG.interval*60000;
+  save('pt_next', NEXT_DUE);
+  document.body.classList.add('due');
+  if(Date.now() - lastFire < 5000) return;
+  lastFire = Date.now();
+  if(!PUSH_SUB) notify('Potty time', 'Take ' + CHILD.name + ' to the bathroom.');
+  if(CFG.sound) chime();
+}
+
+function notify(title, body){
+  if(!CFG.notif) return;
+  try{
+    if('Notification' in window && Notification.permission === 'granted'){
+      new Notification(title, {body:body, tag:'potty', icon:''});
+    }
+  }catch(e){}
+}
+
+function chime(){
+  try{
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return;
+    var ctx = new AC();
+    [880, 1174].forEach(function(f, i){
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, ctx.currentTime + i*0.16);
+      g.gain.exponentialRampToValueAtTime(0.22, ctx.currentTime + i*0.16 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + i*0.16 + 0.32);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(ctx.currentTime + i*0.16); o.stop(ctx.currentTime + i*0.16 + 0.35);
+    });
+  }catch(e){}
+}
+
+
+/* ================= push / lock screen ================= */
+var SW_REG = null, PUSH_SUB = null, deferredPrompt = null;
+
+function cfgReady(){
+  return SUPABASE_URL.indexOf('http') === 0 && SUPABASE_ANON_KEY.length > 40;
+}
+function isStandalone(){
+  return window.navigator.standalone === true ||
+         (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+}
+function isIOS(){
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+function myTz(){
+  try{ return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; }catch(e){ return 'UTC'; }
+}
+function urlB64ToU8(s){
+  var pad = '='.repeat((4 - s.length % 4) % 4);
+  var b = (s + pad).replace(/-/g,'+').replace(/_/g,'/');
+  var raw = atob(b), out = new Uint8Array(raw.length);
+  for(var i=0;i<raw.length;i++) out[i] = raw.charCodeAt(i);
+  return out;
+}
+function keyB64(sub, name){
+  var k = sub.getKey(name);
+  if(!k) return '';
+  var a = new Uint8Array(k), s2 = '';
+  for(var i=0;i<a.length;i++) s2 += String.fromCharCode(a[i]);
+  return btoa(s2).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+
+function registerSW(){
+  if(!('serviceWorker' in navigator)) return Promise.resolve(null);
+  return navigator.serviceWorker.register('./sw.js').then(function(reg){
+    SW_REG = reg;
+    return reg.pushManager.getSubscription();
+  }).then(function(sub){
+    PUSH_SUB = sub || null;
+    if(PUSH_SUB && CFG.notif) syncReminder();
+    return SW_REG;
+  }).catch(function(e){ console.warn('sw', e); return null; });
+}
+
+function rpc(fn, body){
+  return fetch(SUPABASE_URL.replace(/\/+$/,'') + '/rest/v1/rpc/' + fn, {
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization':'Bearer ' + SUPABASE_ANON_KEY
+    },
+    body: JSON.stringify(body)
+  });
+}
+
+/* tell the server when the next nudge should go out */
+function syncReminder(){
+  if(!PUSH_SUB || !CFG.notif || !cfgReady()) return;
+  rpc('save_reminder', {
+    p_endpoint: PUSH_SUB.endpoint,
+    p_p256dh:   keyB64(PUSH_SUB, 'p256dh'),
+    p_auth:     keyB64(PUSH_SUB, 'auth'),
+    p_child:    (CHILD && CHILD.name) ? CHILD.name : '',
+    p_interval: CFG.interval,
+    p_start:    CFG.dayStart,
+    p_end:      CFG.dayEnd,
+    p_tz:       myTz(),
+    p_next_due: new Date(CFG.paused ? Date.now() + 86400000 : NEXT_DUE).toISOString()
+  }).catch(function(e){ console.warn('sync', e); });
+}
+
+function stopReminder(){
+  if(!PUSH_SUB || !cfgReady()) return Promise.resolve();
+  return rpc('stop_reminder', { p_endpoint: PUSH_SUB.endpoint }).catch(function(){});
+}
+
+function toggleLockScreen(){
+  var el = document.getElementById('sNotif');
+
+  if(CFG.notif){
+    CFG.notif = false; save('pt_cfg', CFG);
+    el.classList.remove('on');
+    stopReminder();
+    if(PUSH_SUB){ PUSH_SUB.unsubscribe().catch(function(){}); PUSH_SUB = null; }
+    paintNotifNote();
+    return;
+  }
+
+  if(!cfgReady()){
+    toast('Supabase keys not filled in yet');
+    paintNotifNote(); return;
+  }
+  if(!('serviceWorker' in navigator) || !('PushManager' in window)){
+    toast('This browser can\u2019t do lock screen alerts');
+    paintNotifNote(); return;
+  }
+  if(isIOS() && !isStandalone()){
+    paintNotifNote();
+    toast('Add it to your home screen first');
+    return;
+  }
+
+  Notification.requestPermission().then(function(perm){
+    if(perm !== 'granted'){ toast('Alerts were blocked'); paintNotifNote(); return; }
+    return registerSW().then(function(reg){
+      if(!reg) throw new Error('no service worker');
+      return reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlB64ToU8(VAPID_PUBLIC_KEY)
+      });
+    }).then(function(sub){
+      PUSH_SUB = sub;
+      CFG.notif = true; save('pt_cfg', CFG);
+      el.classList.add('on');
+      syncReminder();
+      paintNotifNote();
+      toast('Lock screen reminders are on');
+    });
+  }).catch(function(e){
+    console.warn(e);
+    toast('Couldn\u2019t turn on alerts');
+    paintNotifNote();
+  });
+}
+
+/* install to home screen */
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault(); deferredPrompt = e;
+  var b = document.getElementById('installBtn');
+  if(b) b.style.display = 'block';
+});
+function installApp(){
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function(){ deferredPrompt = null; });
+    return;
+  }
+  alert('On iPhone: open this page in Safari, tap the Share button, then "Add to Home Screen". ' +
+        'Open it from the new icon and turn on lock screen reminders there.\n\n' +
+        'On Android: Chrome menu \u22ee, then "Install app".');
+}
+
+/* ================= log sheet ================= */
+var WHAT  = [['pee','💧 Pee'],['poop','💩 Poop']];
+var WHERE = [['potty','In the potty'],['pants','Accident — pants'],['bed','Accident — bed'],['nothing','Sat, nothing came']];
+var WHO   = [['reminder','The reminder'],['asked','A grown-up asked'],['self','Asked on their own']];
+var handsOn = false, editId = null;
+
+function buildLogOpts(){
+  fillOpts('fWhat', WHAT, true);
+  fillOpts('fWhere', WHERE, false);
+  var who = WHO.slice();
+  if(CHILD && CHILD.name) who[2] = ['self', CHILD.name + ' asked'];
+  fillOpts('fWho', who, false);
+  fillOpts('fBy', CFG.caregivers.map(function(n){ return [n, n]; }), false);
+}
+
+/* ---- caregivers ---- */
+function paintCaregivers(){
+  var box = document.getElementById('sCare');
+  box.innerHTML = '';
+  CFG.caregivers.forEach(function(n){
+    var b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = n + '  ✕';
+    b.onclick = function(){ removeCaregiver(n); };
+    box.appendChild(b);
+  });
+  if(!CFG.caregivers.length){
+    box.innerHTML = '<div class="note">Nobody listed yet. Add a name below.</div>';
+  }
+}
+function addCaregiver(){
+  var el = document.getElementById('sCareNew');
+  var v = el.value.trim();
+  if(!v){ return; }
+  if(CFG.caregivers.indexOf(v) > -1){ toast(v + ' is already on the list'); el.value=''; return; }
+  CFG.caregivers.push(v);
+  save('pt_cfg', CFG);
+  el.value = '';
+  paintCaregivers(); buildLogOpts();
+}
+function removeCaregiver(n){
+  CFG.caregivers = CFG.caregivers.filter(function(x){ return x !== n; });
+  save('pt_cfg', CFG);
+  paintCaregivers(); buildLogOpts();
+}
+
+/* ---- share ---- */
+function shareApp(){
+  var url = location.href.split('#')[0];
+  var txt = 'Potty Time \u2014 a simple potty training tracker. Open it and set up your own kid; your log stays on your phone.';
+  if(navigator.share){
+    navigator.share({title:'Potty Time', text:txt, url:url}).catch(function(){});
+    return;
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(function(){
+      toast('Link copied. Paste it to a friend.');
+    }).catch(function(){ prompt('Copy this link:', url); });
+    return;
+  }
+  prompt('Copy this link:', url);
+}
+function fillOpts(id, list, multi){
+  var box = document.getElementById(id);
+  box.innerHTML = '';
+  list.forEach(function(pair){
+    var b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = pair[1];
+    b.setAttribute('data-v', pair[0]);
+    if(pair[0] === 'pants' || pair[0] === 'bed') b.classList.add('warn');
+    b.onclick = function(){
+      if(multi){
+        b.classList.toggle('on');
+      }else{
+        var all = box.querySelectorAll('.opt');
+        for(var i=0;i<all.length;i++) all[i].classList.remove('on');
+        b.classList.add('on');
+      }
+    };
+    box.appendChild(b);
+  });
+}
+function readMulti(id){
+  var out = [], on = document.getElementById(id).querySelectorAll('.opt.on');
+  for(var i=0;i<on.length;i++) out.push(on[i].getAttribute('data-v'));
+  return out;
+}
+function setOpts(id, vals){
+  var all = document.getElementById(id).querySelectorAll('.opt');
+  for(var i=0;i<all.length;i++){
+    all[i].classList.toggle('on', vals.indexOf(all[i].getAttribute('data-v')) > -1);
+  }
+}
+function toggleHands(){
+  handsOn = !handsOn;
+  document.getElementById('fHands').classList.toggle('on', handsOn);
+}
+
+function openLog(){
+  editId = null;
+  document.getElementById('logTitle').textContent = 'Add an entry';
+  setOpts('fWhat', []);
+  setOpts('fWhere', ['potty']);
+  setOpts('fWho', [document.body.classList.contains('due') ? 'reminder' : 'asked']);
+  setOpts('fBy', [CFG.lastBy || CFG.caregivers[0]]);
+  handsOn = false;
+  document.getElementById('fHands').classList.remove('on');
+  document.getElementById('fNote').value = '';
+  var d = new Date();
+  document.getElementById('fTime').value = pad(d.getHours()) + ':' + pad(d.getMinutes());
+  document.getElementById('logScrim').classList.add('on');
+}
+
+function editEntry(id){
+  var e = null;
+  for(var i=0;i<EVENTS.length;i++) if(EVENTS[i].id === id) e = EVENTS[i];
+  if(!e) return;
+  editId = id;
+  document.getElementById('logTitle').textContent = 'Edit entry';
+  setOpts('fWhat', e.what || []);
+  setOpts('fWhere', [e.where]);
+  setOpts('fWho', [e.who]);
+  setOpts('fBy', [e.by || '']);
+  handsOn = !!e.hands;
+  document.getElementById('fHands').classList.toggle('on', handsOn);
+  document.getElementById('fNote').value = e.note || '';
+  var d = new Date(e.ts);
+  document.getElementById('fTime').value = pad(d.getHours()) + ':' + pad(d.getMinutes());
+  document.getElementById('logScrim').classList.add('on');
+}
+
+function saveLog(){
+  var where = readOpt('fWhere');
+  if(!where){ toast('Pick where it happened'); return; }
+  var t = document.getElementById('fTime').value || '00:00';
+  var parts = t.split(':');
+  var base = editId ? new Date(getEvent(editId).ts) : new Date();
+  base.setHours(parseInt(parts[0],10)||0, parseInt(parts[1],10)||0, 0, 0);
+
+  var rec = {
+    id: editId || ('e' + Date.now() + Math.floor(Math.random()*1000)),
+    ts: base.getTime(),
+    what: readMulti('fWhat'),
+    where: where,
+    who: readOpt('fWho') || 'asked',
+    by: readOpt('fBy') || '',
+    hands: handsOn,
+    note: document.getElementById('fNote').value.trim()
+  };
+
+  if(editId){
+    for(var i=0;i<EVENTS.length;i++) if(EVENTS[i].id === editId) EVENTS[i] = rec;
+  }else{
+    EVENTS.push(rec);
+  }
+  if(rec.by){ CFG.lastBy = rec.by; save('pt_cfg', CFG); }
+  save('pt_events', EVENTS);
+  closeSheet('logScrim');
+  if(!editId) resetTimer(false);
+  render(); tick();
+  toast(editId ? 'Entry updated' : (where === 'potty' ? 'Nice one. Saved.' : 'Saved.'));
+}
+
+function getEvent(id){
+  for(var i=0;i<EVENTS.length;i++) if(EVENTS[i].id === id) return EVENTS[i];
+  return null;
+}
+function delEntry(id){
+  if(!confirm('Delete this entry?')) return;
+  EVENTS = EVENTS.filter(function(e){ return e.id !== id; });
+  save('pt_events', EVENTS);
+  render();
+}
+
+/* ================= settings ================= */
+function openSettings(){
+  document.getElementById('sName').value = CHILD.name;
+  document.getElementById('sY').value = CHILD.y || '';
+  document.getElementById('sM').value = CHILD.m || '';
+  buildIntervalOpts('sInt', CFG.interval);
+  document.getElementById('sStart').value = CFG.dayStart;
+  document.getElementById('sEnd').value = CFG.dayEnd;
+  document.getElementById('sNotif').classList.toggle('on', !!CFG.notif);
+  document.getElementById('sSound').classList.toggle('on', !!CFG.sound);
+  paintNotifNote();
+  paintCaregivers();
+  paintSummary();
+  document.getElementById('setScrim').classList.add('on');
+}
+
+function paintNotifNote(){
+  var n = document.getElementById('notifNote');
+  var b = document.getElementById('installBtn');
+  if(b) b.style.display = (isIOS() && !isStandalone()) ? 'block' : (deferredPrompt ? 'block' : 'none');
+
+  if(!('Notification' in window) || !('PushManager' in window)){
+    n.textContent = 'This browser can\u2019t do lock screen alerts. Try Safari on iPhone or Chrome on Android.';
+    return;
+  }
+  if(!cfgReady()){
+    n.textContent = 'Not connected yet. Add your Supabase project URL and public key at the top of index.html.';
+    return;
+  }
+  if(isIOS() && !isStandalone()){
+    n.textContent = 'On iPhone this only works from the home screen icon. Add it below, open it from the icon, then flip this on.';
+    return;
+  }
+  if(Notification.permission === 'denied'){
+    n.textContent = 'Your phone is blocking alerts for this app. Turn them back on in Settings \u2192 Notifications, then try again.';
+    return;
+  }
+  if(CFG.notif){
+    n.textContent = 'Reminders arrive on your lock screen even with the app closed.';
+  }else{
+    n.textContent = 'Get a reminder on your lock screen every ' + CFG.interval +
+                    ' minutes between ' + fmtClock(CFG.dayStart) + ' and ' + fmtClock(CFG.dayEnd) + '.';
+  }
+}
+
+function toggleSound(){
+  CFG.sound = !CFG.sound; save('pt_cfg', CFG);
+  document.getElementById('sSound').classList.toggle('on', CFG.sound);
+  if(CFG.sound) chime();
+}
+
+function saveSettings(){
+  var nm = document.getElementById('sName').value.trim();
+  if(!nm){ toast('Name can\u2019t be blank'); return; }
+  CHILD.name = nm;
+  CHILD.y = parseInt(document.getElementById('sY').value,10) || 0;
+  CHILD.m = parseInt(document.getElementById('sM').value,10) || 0;
+  var oldInt = CFG.interval;
+  CFG.interval = parseInt(readOpt('sInt'),10) || 30;
+  CFG.dayStart = document.getElementById('sStart').value || '07:00';
+  CFG.dayEnd = document.getElementById('sEnd').value || '20:00';
+  save('pt_child', CHILD); save('pt_cfg', CFG);
+  if(oldInt !== CFG.interval) resetTimer(false); else syncReminder();
+  closeSheet('setScrim');
+  paintHeader(); render(); tick();
+  toast('Settings saved');
+}
+
+function wipe(){
+  if(!confirm('Erase everything — name, settings and all logged trips?')) return;
+  stopReminder();
+  if(PUSH_SUB) PUSH_SUB.unsubscribe().catch(function(){});
+  try{
+    localStorage.removeItem('pt_child');
+    localStorage.removeItem('pt_cfg');
+    localStorage.removeItem('pt_events');
+    localStorage.removeItem('pt_next');
+  }catch(e){}
+  location.reload();
+}
+
+/* ================= render ================= */
+function pad(n){ return (n<10?'0':'') + n; }
+function fmtTime(d){
+  var h = d.getHours(), m = d.getMinutes(), ap = h >= 12 ? 'pm' : 'am';
+  h = h % 12; if(h === 0) h = 12;
+  return h + ':' + pad(m) + ap;
+}
+function fmtClock(t){
+  var p = String(t||'00:00').split(':');
+  var d = new Date(); d.setHours(parseInt(p[0],10)||0, parseInt(p[1],10)||0);
+  return fmtTime(d);
+}
+function dayKey(ts){
+  var d = new Date(ts);
+  return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+}
+function todayKey(){ return dayKey(Date.now()); }
+
+function isAccident(e){ return e.where === 'pants' || e.where === 'bed'; }
+
+function render(){
+  var sorted = EVENTS.slice().sort(function(a,b){ return b.ts - a.ts; });
+  var today = sorted.filter(function(e){ return dayKey(e.ts) === todayKey(); });
+
+  /* tallies */
+  var potty = 0, acc = 0;
+  today.forEach(function(e){
+    if(e.where === 'potty' && e.what.length) potty++;
+    if(isAccident(e)) acc++;
+  });
+  var streak = 0;
+  for(var i=0;i<sorted.length;i++){
+    if(isAccident(sorted[i])) break;
+    if(sorted[i].where === 'potty' && sorted[i].what.length) streak++;
+  }
+  document.getElementById('tlPotty').textContent = potty;
+  document.getElementById('tlAcc').textContent = acc;
+  document.getElementById('tlStreak').textContent = streak;
+
+  renderRibbon(today);
+  renderLog(sorted);
+}
+
+function renderRibbon(today){
+  var box = document.getElementById('ribbon');
+  var empty = document.getElementById('ribEmpty');
+  document.getElementById('ribCount').textContent =
+    today.length ? today.length + (today.length === 1 ? ' trip' : ' trips') : '';
+
+  if(!today.length){
+    box.innerHTML = ''; box.style.display = 'none'; empty.style.display = 'block';
+    return;
+  }
+  box.style.display = 'block'; empty.style.display = 'none';
+
+  var s = timeToMins(CFG.dayStart), e = timeToMins(CFG.dayEnd);
+  if(e <= s) e = s + 720;
+  var span = e - s;
+
+  var html = '<div class="ribbon-track"></div>';
+  var now = new Date();
+  var nowM = now.getHours()*60 + now.getMinutes();
+  var nowPct = Math.max(0, Math.min(100, ((nowM - s)/span)*100));
+  html += '<div class="ribbon-now" style="left:' + nowPct + '%"></div>';
+
+  today.slice().sort(function(a,b){ return a.ts - b.ts; }).forEach(function(ev){
+    var d = new Date(ev.ts);
+    var m = d.getHours()*60 + d.getMinutes();
+    var pct = Math.max(2, Math.min(98, ((m - s)/span)*100));
+    var cls = isAccident(ev) ? 'bead acc' : (ev.what.length ? 'bead' : 'bead dry');
+    var face = isAccident(ev) ? '!' : (ev.what.indexOf('poop') > -1 ? '💩' : (ev.what.indexOf('pee') > -1 ? '💧' : '·'));
+    html += '<div class="' + cls + '" style="left:' + pct + '%" title="' + fmtTime(d) + '">' + face + '</div>';
+  });
+
+  html += '<div class="ribbon-labels"><span>' + fmtClock(CFG.dayStart) +
+          '</span><span>' + fmtClock(CFG.dayEnd) + '</span></div>';
+  box.innerHTML = html;
+}
+
+var WHERE_LABEL = {potty:'In the potty', pants:'Accident — pants', bed:'Accident — bed', nothing:'Sat, nothing came'};
+var WHO_LABEL   = {reminder:'Reminder', asked:'I asked', self:'Asked on his own'};
+
+function renderLog(sorted){
+  var box = document.getElementById('log');
+  if(!sorted.length){
+    box.innerHTML = '<div class="empty"><b>Nothing here yet</b>Tap Add and it\u2019ll show up.</div>';
+    return;
+  }
+  var html = '', curDay = '';
+  sorted.slice(0, 200).forEach(function(ev){
+    var k = dayKey(ev.ts);
+    if(k !== curDay){
+      curDay = k;
+      html += '<div class="dayhead">' + dayLabel(ev.ts) + '</div>';
+    }
+    var chips = '';
+    if(ev.what.indexOf('pee') > -1)  chips += '<span class="chip">💧 Pee</span>';
+    if(ev.what.indexOf('poop') > -1) chips += '<span class="chip">💩 Poop</span>';
+    chips += '<span class="chip' + (isAccident(ev) ? ' acc' : '') + '">' + WHERE_LABEL[ev.where] + '</span>';
+    chips += '<span class="chip soft">' + WHO_LABEL[ev.who] + '</span>';
+    if(ev.hands) chips += '<span class="chip soft">🧼 Hands</span>';
+    if(ev.by) chips += '<span class="chip soft">👤 ' + esc(ev.by) + '</span>';
+
+    html += '<div class="entry">' +
+      '<div class="entry-time">' + fmtTime(new Date(ev.ts)) + '</div>' +
+      '<div class="entry-body"><div class="chips">' + chips + '</div>' +
+      (ev.note ? '<div class="entry-note">' + esc(ev.note) + '</div>' : '') +
+      '</div>' +
+      '<button class="entry-del" onclick="editEntry(\'' + ev.id + '\')" aria-label="Edit">✎</button>' +
+      '<button class="entry-del" onclick="delEntry(\'' + ev.id + '\')" aria-label="Delete">✕</button>' +
+      '</div>';
+  });
+  box.innerHTML = html;
+}
+
+function dayLabel(ts){
+  var k = dayKey(ts);
+  if(k === todayKey()) return 'Today';
+  var y = new Date(Date.now() - 86400000);
+  if(k === dayKey(y.getTime())) return 'Yesterday';
+  var d = new Date(ts);
+  return d.toLocaleDateString(undefined, {weekday:'short', month:'short', day:'numeric'});
+}
+
+function esc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ================= misc ================= */
+function closeSheet(id){ document.getElementById(id).classList.remove('on'); }
+
+var toastT;
+function toast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('on');
+  clearTimeout(toastT);
+  toastT = setTimeout(function(){ t.classList.remove('on'); }, 2200);
+}
+
+document.addEventListener('visibilitychange', function(){
+  if(!document.hidden && CHILD){ render(); tick(); }
+});
+
+boot();
+</script>
+</body>
+</html>
